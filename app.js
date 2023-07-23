@@ -1,5 +1,6 @@
 const express = require("express");
 const { open } = require("sqlite");
+const sqlite3 = require("sqlite3").verbose();
 const sqlite3 = require("sqlite3");
 const axios = require("axios");
 const path = require("path");
@@ -12,6 +13,73 @@ app.use(express.json());
 
 let database = null;
 
+
+// Create SQLite database
+const database = new sqlite3.Database("database.db", (err) => {
+  if (err) {
+    console.error("Error opening database:", err.message);
+  } else {
+    console.log("Database connected successfully!");
+    createTables(); // Create tables if they don't exist
+  }
+});
+
+
+
+// Create tables
+function createTables() {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS amazon (
+      id INTEGER PRIMARY KEY,
+      title TEXT,
+      price FLOAT, 
+      description TEXT,
+      category VARCHAR(250),
+      image TEXT,
+      sold TEXT,
+      dateOfSale TEXT
+    )
+  `);
+}
+
+// Fetch data from the third-party API and store in the database
+async function fetchDataAndInitializeDB() {
+  try {
+    const response = await axios.get(
+      "https://s3.amazonaws.com/roxiler.com/product_transaction.json"
+    );
+    const amazon = response.data; // Assuming the response contains an array of users
+
+    for (const user of amazon) {
+      db.run(
+        "INSERT INTO amazon (title, price,description,category,image,sold,dateOfSale) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          user.title,
+          user.price,
+          user.description,
+          user.category,
+          user.image,
+          user.sold,
+          user.dateOfSale,
+        ]
+      );
+    }
+
+    console.log("Data initialized successfully!");
+  } catch (error) {
+    console.error("Error fetching data:", error.message);
+  }
+}
+
+// Initialize database with seed data
+app.get("/initdb", (req, res) => {
+  fetchDataAndInitializeDB();
+  res.send("Initializing database...");
+});
+
+
+
+
 const initializeDbAndServer = async () => {
   try {
     database = await open({
@@ -20,7 +88,7 @@ const initializeDbAndServer = async () => {
     });
 
     app.listen(3000, () =>
-      console.log("Server Running at http://localhost:3000/")
+      console.log("Server Running at http://localhost:3001/")
     );
   } catch (error) {
     console.log(`DB Error: ${error.message}`);
@@ -130,3 +198,10 @@ app.get("/combined-data/:month", async (req, res) => {
 });
 
 module.exports = app;
+
+
+
+
+
+
+ 
