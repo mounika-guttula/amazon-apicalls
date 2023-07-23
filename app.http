@@ -1,0 +1,20 @@
+
+METHOD: GET
+URL: http://localhost:3000/initdb
+###
+
+
+METHOD: GET 
+URL:http://localhost:3000/totalItems-sale-amount/04
+
+####
+METHOD: GET 
+URL:http://localhost:3000/bar-chart-data/04
+####
+
+METHOD: GET 
+URL:http://localhost:3000/unique-category/04
+
+####
+METHOD: GET 
+URL:http://localhost:3000/combined-data/04
